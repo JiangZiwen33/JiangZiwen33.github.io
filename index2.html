@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多媒体展示页面</title>
+    <style>
+        /* 重置默认样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 主体样式调整 */
+        body {
+            min-height: 170vh;
+            padding-top: 679px; /* 顶部图片高度 */
+            background: url('ppp2222.png');
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            position: relative;
+            font-family: Arial, sans-serif;
+        }
+
+        /* 自定义鼠标样式 */
+        .custom-cursor {
+            position: fixed;
+            width: 150px;
+            height: 150px;
+            pointer-events: none;
+            z-index: 9999;
+            background: url('SHUBIAO.png') no-repeat center center;
+            background-size: contain;
+            transition: transform 0.1s, opacity 0.3s;
+        }
+
+        .custom-cursor.click {
+            transform: scale(0.8) rotate(15deg);
+            opacity: 0.8;
+        }
+
+        /* 视频容器样式 */
+        .video-container {
+            width: 55vw;
+            max-width: 1200px;
+            height: 42vw;
+            max-height: 625px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 0 34px rgba(83, 125, 152, 0.5);
+            margin-top: -58px;
+        }
+
+        #main-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.3s;
+        }
+
+        /* 加载提示 */
+        .loading-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2rem;
+            opacity: 0.8;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-btn::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 12px 0 12px 18px;
+            border-color: transparent transparent transparent #FF6B35;
+            margin-right: -3px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.1);
+        }
+
+        /* 音乐状态提示 */
+        .music-status {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(113, 192, 255, 0.7);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .top-banner {
+                height: 100px;
+            }
+
+            body {
+                padding-top: 100px;
+            }
+
+            .video-container {
+                width: 90vw;
+                height: 60vw;
+                margin-top: 30px;
+            }
+
+            .back-btn {
+                bottom: 20px;
+                right: 20px;
+                width: 40px;
+                height: 40px;
+            }
+
+            .back-btn::after {
+                border-width: 8px 0 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部横幅 -->
+    <div class="top-banner"></div>
+
+    <!-- 自定义鼠标 -->
+    <div class="custom-cursor" id="customCursor"></div>
+
+    <!-- 音频元素 -->
+    <audio id="clickSound" src="shubiao.MP3" preload="auto"></audio>
+    <audio id="bgMusic" loop autoplay>
+        <source src="back lucky.MP3" type="audio/mpeg">
+    </audio>
+    <div class="music-status" id="musicStatus">音乐加载中...</div>
+
+    <!-- 返回按钮 -->
+    <a href="index3.html" class="back-btn" aria-label="返回"></a>
+
+    <!-- 视频容器 -->
+    <div class="video-container">
+        <video id="main-video" preload="auto" autoplay muted playsinline>
+            <source src="22222.mp4" type="video/mp4">
+            您的浏览器不支持视频播放
+        </video>
+        <div class="loading-text">加载中...</div>
+    </div>
+
+    <script>
+        // 自定义鼠标逻辑
+        const cursor = document.getElementById('customCursor');
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = `${e.clientX - 25}px`;
+            cursor.style.top = `${e.clientY - 25}px`;
+        });
+
+        document.addEventListener('mousedown', () => cursor.classList.add('click'));
+        document.addEventListener('mouseup', () => cursor.classList.remove('click'));
+
+        // 点击音效
+        const clickSound = document.getElementById('clickSound');
+        document.addEventListener('click', () => {
+            clickSound.currentTime = 0;
+            clickSound.play();
+        });
+
+        // 音乐控制
+        const bgMusic = document.getElementById('bgMusic');
+        const musicStatus = document.getElementById('musicStatus');
+        let musicInitialized = false;
+
+        // 初始化音乐
+        function initMusic() {
+            if (musicInitialized) return;
+            
+            bgMusic.currentTime = 0; // 确保每次从头播放
+            bgMusic.volume = 0.5;    // 设置合适音量
+            
+            bgMusic.play()
+                .then(() => {
+                    musicStatus.style.display = 'none';
+                    musicInitialized = true;
+                })
+                .catch(error => {
+                    musicStatus.textContent = '点击页面任意处播放音乐';
+                    musicStatus.style.display = 'block';
+                    document.addEventListener('click', firstClickHandler);
+                });
+        }
+
+        // 首次点击处理
+        function firstClickHandler() {
+            bgMusic.play().then(() => {
+                musicStatus.style.display = 'none';
+                musicInitialized = true;
+            });
+            document.removeEventListener('click', firstClickHandler);
+        }
+
+        // 页面可见性处理
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && !bgMusic.paused) {
+                bgMusic.play().catch(() => musicStatus.style.display = 'block');
+            }
+        });
+
+        // 视频控制
+        const video = document.getElementById('main-video');
+        const container = document.querySelector('.video-container');
+        const loadingText = document.querySelector('.loading-text');
+        let isFirstPlay = true;
+
+        // 视频初始化
+        function initVideo() {
+            loadingText.style.display = 'block';
+            video.play().catch(() => {
+                loadingText.textContent = '点击播放视频';
+                container.style.cursor = 'pointer';
+            });
+        }
+
+        // 视频交互
+        container.addEventListener('click', () => {
+            if (video.paused) {
+                video.muted = false;
+                video.play();
+                if (bgMusic.paused) {
+                    bgMusic.play().catch(() => musicStatus.style.display = 'block');
+                }
+            } else {
+                video.pause();
+            }
+        });
+
+        video.addEventListener('loadeddata', () => loadingText.style.display = 'none');
+        video.addEventListener('play', () => {
+            if (isFirstPlay) {
+                try {
+                    video.requestFullscreen();
+                    isFirstPlay = false;
+                } catch (e) {
+                    console.log('全屏请求失败:', e);
+                }
+            }
+        });
+
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                video[video.paused ? 'play' : 'pause']();
+            }
+        });
+
+        // 返回按钮处理
+        document.querySelector('.back-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.setItem('videoTime', video.currentTime);
+            window.location.href = this.href;
+        });
+
+        // 初始化逻辑
+        window.addEventListener('load', () => {
+            initMusic(); // 初始化背景音乐
+            initVideo(); // 初始化视频
+            
+            // 状态保存
+            setInterval(() => {
+                if (musicInitialized) {
+                    localStorage.setItem('musicPlaying', !bgMusic.paused);
+                }
+            }, 1000);
+        });
+
+        // 页面关闭前保存状态
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('musicPlaying', !bgMusic.paused);
+        });
+
+        // 初始化视频
+        document.addEventListener('DOMContentLoaded', initVideo);
+    </script>
+</body>
+</html>

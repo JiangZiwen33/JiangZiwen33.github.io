@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>互动趣味网站</title>
+    <style>
+        /* 原有样式 */
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            background: url('blu%20njz.png') center/cover;
+            cursor: pointer;
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            color: #ff2222;
+            text-align: right;
+            padding-top: 73vh;
+            mix-blend-mode: lighten;
+        }
+
+        h1 {
+            font-size: 4em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            transition: 0.3s;
+        }
+
+        .floating-shape {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: 0.5s;
+        }
+
+        .interactive-box {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 2px solid white;
+            transition: 1s;
+            opacity: 0.3;
+        }
+
+        .hover-effect {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 2px solid rgba(255,255,255,0.5);
+            transition: 0.3s;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #483dff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,107,107,0.5);
+        }
+
+        /* 新增音频样式 */
+        #bgMusic {
+            display: none;
+        }
+        
+        /* 新增播放按钮样式 */
+        #playBtn {
+            left: 20px;
+            right: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- 新增音频标签 -->
+    <audio id="bgMusic" loop>
+        <source src="hype boy.MP3" type="audio/mpeg">
+        <source src="your-music.ogg" type="audio/ogg">
+        您的浏览器不支持音频播放
+    </audio>
+
+    <div class="content">
+        <h1>-CAKE-</h1>
+        <p>Move your mouse！</p>
+        
+        <!-- 原有返回按钮 -->
+        <a href="index3.html" class="back-btn">BACK</a>
+        
+        <!-- 新增播放按钮 -->
+        <button id="playBtn" class="back-btn">PLAY MUSIC</button>
+    </div>
+
+    <script>
+        // 音乐播放逻辑
+        const bgMusic = document.getElementById('bgMusic');
+        let isPlaying = false;
+
+        // 自动播放尝试
+        function tryAutoPlay() {
+            bgMusic.play()
+                .then(() => {
+                    document.getElementById('playBtn').style.display = 'none';
+                    isPlaying = true;
+                })
+                .catch(error => {
+                    document.getElementById('playBtn').style.display = 'block';
+                });
+        }
+
+        // 页面加载后尝试播放
+        window.addEventListener('DOMContentLoaded', () => {
+            bgMusic.volume = 0.3; // 初始音量设置为30%
+            tryAutoPlay();
+        });
+
+        // 播放按钮点击事件
+        document.getElementById('playBtn').addEventListener('click', () => {
+            bgMusic.play();
+            document.getElementById('playBtn').style.display = 'none';
+            isPlaying = true;
+        });
+
+        // 点击页面任意位置恢复播放
+        document.body.addEventListener('click', () => {
+            if (!isPlaying) {
+                bgMusic.play();
+                isPlaying = true;
+                document.getElementById('playBtn').style.display = 'none';
+            }
+        });
+
+        // 原有互动特效脚本
+        // 鼠标跟随特效
+        document.addEventListener('mousemove', (e) => {
+            const follower = document.createElement('div');
+            follower.className = 'floating-shape';
+            follower.style.left = e.pageX + 'px';
+            follower.style.top = e.pageY + 'px';
+            document.body.appendChild(follower);
+            
+            setTimeout(() => {
+                follower.remove();
+            }, 1000);
+        });
+
+        // 随机生成互动方块
+        for (let i = 0; i < 20; i++) {
+            const box = document.createElement('div');
+            box.className = 'interactive-box';
+            box.style.left = Math.random() * 90 + '%';
+            box.style.top = Math.random() * 90 + '%';
+            box.style.transform = `rotate(${Math.random() * 360}deg)`;
+            document.body.appendChild(box);
+        }
+
+        // 背景视差效果
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            document.body.style.transform = `translate(${x}px, ${y}px)`;
+        });
+
+        // 点击互动效果
+        document.addEventListener('click', (e) => {
+            const colors = ['#ff3366', '#33ff66', '#3366ff', '#ff33ff'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            const effect = document.createElement('div');
+            effect.className = 'hover-effect';
+            effect.style.left = e.pageX - 50 + 'px';
+            effect.style.top = e.pageY - 50 + 'px';
+            effect.style.borderColor = color;
+            document.body.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.style.transform = 'scale(2)';
+                effect.style.opacity = '0';
+                setTimeout(() => effect.remove(), 500);
+            }, 100);
+        });
+
+        // 文字悬浮效果
+        document.querySelector('h1').addEventListener('mouseover', function() {
+            this.style.transform = 'rotate(2deg) scale(1.1)';
+            this.style.textShadow = '4px 4px 6px rgba(0,0,0,0.7)';
+        });
+
+        document.querySelector('h1').addEventListener('mouseout', function() {
+            this.style.transform = 'rotate(0) scale(1)';
+            this.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+        });
+    </script>
+</body>
+</html>

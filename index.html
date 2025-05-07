@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全屏动态加载入口</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            cursor: none; /* 隐藏默认鼠标指针 */
+        }
+
+        /* 背景层 */
+        .background {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: url('goin.jpg') no-repeat center center/cover;
+            z-index: 1;
+        }
+
+        /* 初始覆盖层 */
+        .overlay {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: #ff8841;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            clip-path: circle(100% at 50% 50%);
+            animation: shrink 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            z-index: 2;
+        }
+
+        /* 加载进度 */
+        .progress-text {
+            color: white;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            user-select: none;
+        }
+
+        /* 自定义鼠标指针 */
+        .mouse-circle {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            background: url('SHUBIAO.png') no-repeat center center/cover;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 3;
+        }
+
+        /* 残影效果 */
+        .trail {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trailFade 0.6s linear forwards;
+            z-index: 3;
+        }
+
+        /* 全屏弹出层 */
+        .fullscreen-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            transform: translateY(100%);
+            animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            z-index: 999;
+            overflow: hidden;
+        }
+
+        /* iframe容器 */
+        .iframe-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* 关闭按钮 */
+        .close-btn {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: transform 0.3s;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .close-btn::before,
+        .close-btn::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 2px;
+            background: #333;
+        }
+
+        .close-btn::before {
+            transform: rotate(45deg);
+        }
+
+        .close-btn::after {
+            transform: rotate(-45deg);
+        }
+
+        /* 加载指示器 */
+        .loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #ff8a2a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 1001;
+        }
+
+        /* 动画定义 */
+        @keyframes shrink {
+            to { clip-path: circle(5% at 50% 50%); }
+        }
+
+        @keyframes trailFade {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(0.6); opacity: 0; }
+        }
+
+        @keyframes slideUp {
+            0% { transform: translateY(100%); }
+            90% { transform: translateY(-5%); }
+            100% { transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    <div class="overlay">
+        <div class="progress-text">0%</div>
+    </div>
+    <div class="mouse-circle"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.querySelector('.overlay');
+            const progressText = document.querySelector('.progress-text');
+            const mouseCircle = document.querySelector('.mouse-circle');
+            let currentProgress = 0;
+            let lastPosition = { x: 0, y: 0 };
+
+            // 预加载点击音效
+            const clickSound = new Audio();
+            clickSound.src = 'shubiao.MP3';
+            clickSound.preload = 'auto';
+
+            // 残影生成函数
+            const createTrail = throttle((x, y) => {
+                const trail = document.createElement('div');
+                trail.className = 'trail';
+                trail.style.left = `${x}px`;
+                trail.style.top = `${y}px`;
+                document.body.appendChild(trail);
+                setTimeout(() => trail.remove(), 600);
+            }, 30);
+
+            // 鼠标移动处理
+            const handleMove = (e) => {
+                const x = e.clientX || e.touches[0].clientX;
+                const y = e.clientY || e.touches[0].clientY;
+                
+                mouseCircle.style.left = `${x}px`;
+                mouseCircle.style.top = `${y}px`;
+
+                // 生成残影
+                const deltaX = x - lastPosition.x;
+                const deltaY = y - lastPosition.y;
+                const distance = Math.sqrt(deltaX ** 2 + deltaY ** 2);
+                if (distance > 5) {
+                    for (let i = 0; i < Math.floor(distance / 8); i++) {
+                        const ratio = i / 5;
+                        createTrail(x - deltaX * ratio, y - deltaY * ratio);
+                    }
+                }
+                lastPosition = { x, y };
+            };
+
+            // 创建全屏页面
+            const createFullscreenPage = () => {
+                const popup = document.createElement('div');
+                popup.className = 'fullscreen-popup';
+
+                // 加载指示器
+                const loader = document.createElement('div');
+                loader.className = 'loader';
+                popup.appendChild(loader);
+
+                // iframe
+                const iframe = document.createElement('iframe');
+                iframe.className = 'iframe-container';
+                iframe.src = 'index1.html';
+                iframe.onload = () => loader.remove();
+
+                // 关闭按钮
+                const closeBtn = document.createElement('div');
+                closeBtn.className = 'close-btn';
+                closeBtn.addEventListener('click', () => {
+                    popup.style.transform = 'translateY(100%)';
+                    setTimeout(() => popup.remove(), 800);
+                });
+
+                // 移动端滑动关闭
+                let touchStartY = 0;
+                popup.addEventListener('touchstart', e => {
+                    touchStartY = e.touches[0].clientY;
+                });
+
+                popup.addEventListener('touchmove', e => {
+                    const deltaY = e.touches[0].clientY - touchStartY;
+                    if (deltaY > 50) {
+                        popup.style.transform = `translateY(${deltaY}px)`;
+                    }
+                });
+
+                popup.addEventListener('touchend', e => {
+                    const deltaY = e.changedTouches[0].clientY - touchStartY;
+                    if (deltaY > 100) {
+                        closeBtn.click();
+                    } else {
+                        popup.style.transform = 'translateY(0)';
+                    }
+                });
+
+                popup.appendChild(iframe);
+                popup.appendChild(closeBtn);
+                document.body.appendChild(popup);
+            };
+
+            // 点击处理
+            const handleClick = (e) => {
+                // 播放音效
+                clickSound.cloneNode(true).play().catch(error => {
+                    console.log('音效自动播放被阻止，用户交互后生效');
+                });
+
+                // 点击效果
+                const clickEffect = document.createElement('div');
+                clickEffect.style.cssText = `
+                    position: fixed;
+                    width: 20px;
+                    height: 20px;
+                    background: rgba(255, 255, 255, 0.7);
+                    border-radius: 50%;
+                    left: ${e.clientX || e.touches[0].clientX}px;
+                    top: ${e.clientY || e.touches[0].clientY}px;
+                    pointer-events: none;
+                `;
+                clickEffect.animate([
+                    { transform: 'scale(0)', opacity: 1 },
+                    { transform: 'scale(2)', opacity: 0 }
+                ], { duration: 500, easing: 'ease-out' });
+                document.body.appendChild(clickEffect);
+
+                // 创建全屏页面
+                createFullscreenPage();
+
+                // 清理事件
+                document.removeEventListener('mousemove', handleMove);
+                document.removeEventListener('touchmove', handleMove);
+                document.removeEventListener('click', handleClick);
+                document.removeEventListener('touchstart', handleClick);
+            };
+
+            // 加载完成处理
+            const completeLoading = () => {
+                overlay.style.display = 'none';
+                mouseCircle.style.opacity = '1';
+                document.body.style.cursor = 'none';
+                
+                // 移动端适配
+                if ('ontouchstart' in window) {
+                    mouseCircle.style.display = 'none';
+                }
+
+                // 绑定事件
+                document.addEventListener('mousemove', handleMove);
+                document.addEventListener('touchmove', handleMove);
+                document.addEventListener('click', handleClick);
+                document.addEventListener('touchstart', handleClick);
+            };
+
+            // 节流函数
+            function throttle(fn, delay) {
+                let lastCall = 0;
+                return (...args) => {
+                    const now = Date.now();
+                    if (now - lastCall < delay) return;
+                    lastCall = now;
+                    fn(...args);
+                }
+            }
+
+            // 启动加载进度
+            overlay.addEventListener('animationend', () => {
+                const progressInterval = setInterval(() => {
+                    currentProgress = Math.min(currentProgress + 2, 100);
+                    progressText.textContent = `${currentProgress}%`;
+                    if (currentProgress === 100) {
+                        clearInterval(progressInterval);
+                        completeLoading();
+                    }
+                }, 50);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐平台</title>
+    <style>
+        .video-description {
+        position: absolute;
+        top: 28%;
+        right: 35%;
+        transform: translateY(-50%);
+        color: #fff;
+        background: rgba(218, 130, 166, 0.69);
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 418px;
+        line-height: 2.2;
+    }
+
+    @media (max-width: 100px) {
+        .video-description {
+            position: static;
+            transform: none;
+            margin-top: 20px;
+            max-width: 100%;
+        }
+    }
+        
+        /* 新增样式 */
+        .bottom-section {
+            position: absolute;
+            top: 125vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 1200px;
+            text-align: center;
+            padding: 40px 0;
+            z-index: 10;
+        }
+
+        .additional-images {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 240px;
+        }
+
+        .additional-images img {
+            width: 300px;
+            height: 326px;
+            object-fit: cover;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(213, 115, 236, 0.31);
+            transition: transform 0.3s;
+        }
+
+        .additional-images img:hover {
+            transform: scale(1.05);
+        }
+
+        .jump-button {
+            padding: 15px 26px;
+            background: #4658f2;
+            border: none;
+            border-radius: 40px;
+            color: white;
+            border: 6px solid #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 24px rgba(70, 88, 242, 0.3);
+        }
+
+        .jump-button:hover {
+            background: #2f3ec9;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(70, 88, 242, 0.4);
+        }
+        
+          /* 自定义鼠标样式 */
+        .custom-cursor {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            z-index: 9999;
+            background: url('SHUBIAO.png') no-repeat center center;
+            background-size: contain;
+            transition: transform 0.1s, opacity 0.3s;
+        }
+
+        .custom-cursor.click {
+            transform: scale(0.8) rotate(15deg);
+            opacity: 0.8;
+        }
+        
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 背景分层 */
+        .background-layer {
+            position: fixed;
+            width: 100vw;
+            height: 102vh;
+            z-index: -2;
+        }
+
+        .original-bg {
+            background: url('Group%202.jpg') no-repeat center center/cover;
+            filter: brightness(1);
+        }
+
+        .extended-bg {
+            background: url('P4.jpg') no-repeat center bottom/cover;
+            top: 100vh;
+            height: 100vh;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        /* 主容器 */
+        .main-container {
+            position: relative;
+            min-height: 200vh;
+        }
+
+        /* 搜索栏 */
+        .search-container {
+            position: fixed;
+            top: 6%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 937px;
+            z-index: 76;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px;
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        #searchInput {
+            flex: 1;
+            padding: 12px 30px;
+            font-size: 16px;
+            border: 2px solid #bdd1ff;
+            border-radius: 40px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        #searchButton {
+            padding: 7px 31px;
+            background: #4658f2;
+            border: none;
+            border-radius: 40px;
+            color: white;
+            border: 6px solid #ffffff;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* 主轮播 */
+        .main-carousel {
+            position: absolute;
+            top: 44vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        .carousel-wrapper {
+            position: relative;
+            padding: 0 80px;
+        }
+
+        .image-track {
+            display: flex;
+            gap: 40px;
+            transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .carousel-item {
+            position: relative;
+            flex: 0 0 260px;
+            height: 246px;
+            border-radius: 16px;
+            overflow: hidden;
+            transform: scale(0.9);
+            opacity: 0.7;
+            cursor: pointer;
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+
+        .carousel-item::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to top, 
+                rgba(255,255,255,0.4) 0%, 
+                rgba(255,255,255,0) 100%);
+            filter: blur(4px);
+            transform: scaleY(-1);
+            opacity: 0.6;
+        }
+
+        .carousel-item.active {
+            transform: scale(1.2);
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 箭头 */
+        .arrow {
+            position: absolute;
+            top: 50%;
+            width: 50px;
+            height: 50px;
+            background: #ffffff;
+            clip-path: polygon(75% 0%, 100% 50%, 75% 100%, 0% 100%, 25% 50%, 0% 0%);
+            cursor: pointer;
+            border: 15px solid #ffffff;
+            transform: translateY(-50%);
+            opacity: 0.9;
+            z-index: 100;
+            transition: all 0.3s;
+        }
+
+        .arrow-left { left: -80px; }
+        .arrow-right { 
+            right: -80px;
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .arrow:hover {
+            opacity: 1;
+            transform: translateY(-50%) scale(1.15);
+        }
+        .arrow-right:hover {
+            transform: translateY(-50%) rotate(180deg) scale(1.15);
+        }
+
+        /* 底部画廊 */
+        .bottom-gallery {
+            position: fixed;
+            left: 7%;
+            bottom: 1%;
+            width: 575px;
+            z-index: 99;
+            transition: all 0.4s;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 8px 24px rgba(213, 115, 236, 0.31);
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-10px) scale(1.08) rotateX(5deg) rotateY(-5deg);
+            filter: brightness(1.15);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 171px;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+
+        /* 延长内容 */
+        .extended-content {
+            position: absolute;
+            top: 100vh;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            max-width: 800px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 8px solid #898989;
+            border-radius: 24px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="video-description">
+    <p>The album's desserts are displayed in the window</p>
+    <p>-------部分专辑甜品展示橱窗-------</p>
+</div>
+    
+    <!-- 新增底部内容 -->
+        <section class="bottom-section">
+            <div class="additional-images">
+                <img src="G23.png" alt="新增图片1">
+                <img src="Group%2022.png" alt="新增图片2">
+            </div>
+            <button class="jump-button" onclick="window.open('https://1882281.cargo.site/', '_blank')">MAKE DESSERT </button>
+        </section>
+    
+     <!-- 自定义鼠标 -->
+    <div class="custom-cursor" id="customCursor"></div>
+    
+     <!-- 音频元素 -->
+    <audio id="clickSound" src="shubiao.MP3" preload="auto"></audio>
+     <audio id="bgMusic" loop>
+        <source src="luck2.MP3" type="audio/mpeg">
+         </audio>
+    
+    <!-- 背景层 -->
+    <div class="background-layer original-bg"></div>
+    <div class="background-layer extended-bg"></div>
+
+    <div class="main-container">
+        <!-- 搜索栏 -->
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Enter an album...">
+                <button id="searchButton">SEARCH</button>
+            </div>
+        </div>
+
+        <!-- 主轮播 -->
+        <div class="main-carousel">
+            <div class="carousel-wrapper">
+                <div class="arrow arrow-left"></div>
+                <div class="arrow arrow-right"></div>
+                <div class="image-track">
+                    <div class="carousel-item" data-page="1"><img src="njz.jpg" alt="推荐1"></div>
+                    <div class="carousel-item" data-page="2"><img src="cruel.jpg" alt="推荐2"></div>
+                    <div class="carousel-item active" data-page="3"><img src="ruby.jpg" alt="推荐3"></div>
+                    <div class="carousel-item" data-page="7"><img src="brat.jpg" alt="推荐4"></div>
+                    <div class="carousel-item" data-page="8"><img src="qzl.jpg" alt="推荐5"></div>
+                    <div class="carousel-item" data-page="9"><img src="lalaland.jpg" alt="推荐6"></div>
+                    <div class="carousel-item" data-page="10"><img src="diandian.jpg" alt="推荐7"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 延长内容 -->
+        <div class="extended-content">
+            <h2>RECOMMEND ALBUM...</h2>
+            <p>. . . ...</p>
+        </div>
+    </div>
+
+    <!-- 底部画廊 -->
+    <div class="bottom-gallery">
+        <div class="gallery-grid">
+            <div class="gallery-item">
+                <img src="starb.jpg" alt="精选1">
+            </div>
+            <div class="gallery-item">
+                <img src="flo.jpg" alt="精选2">
+            </div>
+            <div class="gallery-item">
+                <img src="aes.jpg" alt="精选3">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 自定义鼠标逻辑
+        const cursor = document.getElementById('customCursor');
+        
+        // 鼠标跟踪
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = `${e.clientX - 25}px`;
+            cursor.style.top = `${e.clientY - 25}px`;
+        });
+
+        // 点击动画
+        document.addEventListener('mousedown', () => {
+            cursor.classList.add('click');
+        });
+        document.addEventListener('mouseup', () => {
+            cursor.classList.remove('click');
+        });
+
+        // 音频控制
+        const clickSound = document.getElementById('clickSound');
+        
+         // 全局点击音效
+        document.addEventListener('click', () => {
+            clickSound.currentTime = 0;
+            clickSound.play();
+        });
+        
+        // 搜索功能
+        document.getElementById('searchButton').addEventListener('click', () => {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (keyword) {
+                window.location.href = `https://y.qq.com/n/ryqq/search?w=${encodeURIComponent(keyword)}`;
+            }
+        });
+
+        // 轮播功能
+        const track = document.querySelector('.image-track');
+        const items = document.querySelectorAll('.carousel-item');
+        const arrows = document.querySelectorAll('.arrow');
+        let currentIndex = 2;
+        const itemWidth = items[0].offsetWidth + 40;
+
+        function updateCarousel() {
+            const containerWidth = track.parentElement.offsetWidth;
+            const offset = (containerWidth/2 - itemWidth/2) - currentIndex * itemWidth;
+            track.style.transform = `translateX(${offset}px)`;
+            
+            items.forEach((item, index) => {
+                const reflection = item.querySelector('::after');
+                item.classList.toggle('active', index === currentIndex);
+                item.style.opacity = index === currentIndex ? 1 : 0.7;
+                item.style.zIndex = index === currentIndex ? 2 : 1;
+            });
+        }
+
+        arrows.forEach(arrow => {
+            arrow.addEventListener('click', () => {
+                if (arrow.classList.contains('arrow-left')) {
+                    currentIndex = Math.max(currentIndex - 1, 0);
+                } else {
+                    currentIndex = Math.min(currentIndex + 1, items.length - 1);
+                }
+                updateCarousel();
+            });
+        });
+
+        // 图片点击跳转
+        document.querySelectorAll('.carousel-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const pageNumber = this.dataset.page;
+                window.open(`page${pageNumber}.html`, '_blank');
+            });
+        });
+
+        // 底部画廊悬停
+        document.querySelectorAll('.gallery-item').forEach(item => {
+            item.addEventListener('mousemove', (e) => {
+                const rect = item.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                
+                item.style.transform = `
+                    perspective(1000px)
+                    rotateX(${y * 15}deg)
+                    rotateY(${-x * 15}deg)
+                    translateY(-10px)
+                    scale(1.08)
+                `;
+            });
+
+            item.addEventListener('mouseleave', () => {
+                item.style.transform = 'none';
+            });
+        });
+
+        // 背景切换
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const extendedBg = document.querySelector('.extended-bg');
+            extendedBg.style.opacity = Math.min((scrollY - 500) / 300, 1);
+            
+            // 底部画廊视差
+            const gallery = document.querySelector('.bottom-gallery');
+            gallery.style.transform = `translateY(${-scrollY * 0.2}px)`;
+            gallery.style.opacity = 1 - Math.min(scrollY / 800, 0.3);
+        });
+
+        // 初始化
+        updateCarousel();
+        window.addEventListener('resize', updateCarousel);
+        
+         const bgMusic = document.getElementById('bgMusic');
+
+        // 背景音乐自动播放
+        document.addEventListener('DOMContentLoaded', () => {
+            const playMusic = () => {
+                bgMusic.play();
+                document.removeEventListener('click', playMusic);
+            };
+
+            bgMusic.play().catch(() => {
+                document.addEventListener('click', playMusic);
+            });
+        });
+    </script>
+</body>
+</html>

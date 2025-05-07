@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互动甜品网站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            cursor: none;
+            min-height: 100vh;
+            background: url('Group%2011.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 自定义鼠标样式 */
+        .custom-cursor {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            z-index: 9999;
+            background: url('SHUBIAO.png') no-repeat center center;
+            background-size: contain;
+            transition: transform 0.1s, opacity 0.3s;
+        }
+
+        .custom-cursor.click {
+            transform: scale(0.8) rotate(15deg);
+            opacity: 0.8;
+        }
+
+        /* 标题容器 */
+        .title-container {
+            text-align: right;
+            color: white;
+            width: 90%;
+            max-width: 1400px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-37%, -50%);
+        }
+
+        /* 文字样式 */
+        h1, h2 {
+            display: block;
+            width: 68%;
+            -webkit-text-stroke: 10px #234af9;
+            text-shadow: 
+                0 0 10px rgba(0, 168, 255, 0.3),
+                2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .title-container h1 {
+            font-size: clamp(8rem, 15vw, 12rem);
+            letter-spacing: -0.06em;
+            word-spacing: -0.1em;
+            line-height: 1;
+        }
+
+        .title-container h2 {
+            font-size: clamp(10rem, 8vw, 7rem);
+            letter-spacing: -0.04em;
+            word-spacing: -0.1em;
+        }
+
+        /* 文字动画 */
+        h1 span, 
+        h2 span {
+            display: inline-block;
+            transition: transform 0.3s ease;
+            cursor: default;
+        }
+
+        h1 span:hover, 
+        h2 span:hover {
+            animation: subtleHover 0.4s ease;
+        }
+
+        @keyframes subtleHover {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* 开始按钮 */
+        .start-btn {
+            padding: 8px 51px;
+            background: #ff8c3b;
+            border: 7px solid white;
+            color: white;
+            font-size: 2.4rem;
+            border-radius: 30px;
+            position: absolute;
+            bottom: 4vh;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .start-btn:hover {
+            background: #FF8242;
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .title-container {
+                width: 90%;
+                padding: 0 5%;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+                margin-bottom: 0.3em;
+            }
+
+            h2 {
+                font-size: 1.6rem;
+            }
+
+            .start-btn {
+                font-size: 1.1rem;
+                padding: 12px 35px;
+                bottom: 12vh;
+            }
+
+            @keyframes subtleHover {
+                50% { transform: translateY(-2px); }
+            }
+        }
+
+        @media (max-height: 600px) {
+            .start-btn {
+                bottom: 8vh;
+            }
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 自定义鼠标 -->
+    <div class="custom-cursor" id="customCursor"></div>
+
+    <!-- 标题内容 -->
+    <div class="title-container">
+        <h1>DESSERT-</h1>
+        [<h2>ISSIMO</h2>
+    </div>
+    
+    <!-- 开始按钮 -->
+    <a href="index2.html" class="start-btn">START</a>
+
+    <!-- 音频元素 -->
+    <audio id="clickSound" src="shubiao.MP3" preload="auto"></audio>
+    <audio id="bgMusic" loop>
+        <source src="back lucky.MP3" type="audio/mpeg">
+        您的浏览器不支持音频播放
+    </audio>
+
+    <script>
+        // 自定义鼠标逻辑
+        const cursor = document.getElementById('customCursor');
+        
+        // 鼠标跟踪
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = `${e.clientX - 25}px`;
+            cursor.style.top = `${e.clientY - 25}px`;
+        });
+
+        // 点击动画
+        document.addEventListener('mousedown', () => {
+            cursor.classList.add('click');
+        });
+        document.addEventListener('mouseup', () => {
+            cursor.classList.remove('click');
+        });
+
+        // 音频控制
+        const clickSound = document.getElementById('clickSound');
+        const bgMusic = document.getElementById('bgMusic');
+
+        // 背景音乐自动播放
+        document.addEventListener('DOMContentLoaded', () => {
+            const playMusic = () => {
+                bgMusic.play();
+                document.removeEventListener('click', playMusic);
+            };
+
+            bgMusic.play().catch(() => {
+                document.addEventListener('click', playMusic);
+            });
+        });
+
+        // 全局点击音效
+        document.addEventListener('click', () => {
+            clickSound.currentTime = 0;
+            clickSound.play();
+        });
+
+        // 文字动画效果
+        function splitText(element) {
+            const text = element.innerText;
+            element.innerHTML = text.split('').map(char => 
+                char === ' ' ? '<span style="width: 0.3em"></span>' : `<span>${char}</span>`
+            ).join('');
+        }
+
+        // 初始化文字拆分
+        document.querySelectorAll('h1, h2').forEach(title => {
+            splitText(title);
+            
+            title.addEventListener('click', () => {
+                title.style.animation = 'none';
+                setTimeout(() => title.style.animation = '', 10);
+            });
+        });
+
+        // 窗口调整时重置文字
+        window.addEventListener('resize', () => {
+            document.querySelectorAll('h1, h2').forEach(splitText);
+        });
+        
+        window.addEventListener('load', () => {
+    console.log('存储状态:', {
+        time: localStorage.getItem('musicCurrentTime'),
+        playing: localStorage.getItem('musicPlaying')
+    });
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>互动趣味网站</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background: url('pink%20cru.png') center/cover fixed;
+            font-family: 'Microsoft Yahei', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .content {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 22px;
+            position: absolute;
+            top: 92%;
+            left: 12%;
+            transform: translate(-59%, -50%);
+            text-align: center;
+            box-shadow: 0 0 5px pink;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,107,107,0.5);
+        }
+
+        .interactive-element {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 50%;
+            pointer-events: none;
+            transition: all 1s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating-text {
+            animation: float 3s ease-in-out infinite;
+            color: #333;
+            font-size: 24px;
+            margin: 15px 0;
+        }
+
+        /* 隐藏的音频控制器 */
+        #audioController {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="index3.html" class="back-btn">BACK</a>
+    
+    <!-- 增强版音频元素 -->
+    <audio id="bgMusic" loop controlsid="audioController">
+        <source src="c%20sum.MP3" type="audio/mpeg">
+        <source src="background-music.ogg" type="audio/ogg">
+        您的浏览器不支持音频播放
+    </audio>
+
+    <div class="content">
+        <h1 class="floating-text">BASQUE</h1>
+        <p>Click！</p>
+    </div>
+
+    <script>
+        // 音频自动播放逻辑
+        const audio = document.getElementById('bgMusic');
+        let audioEnabled = false;
+
+        // 自动播放尝试
+        const tryAutoPlay = () => {
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    
+                });
+            }
+        }
+
+        // 用户交互后启用音频
+        const enableAudio = () => {
+            audioEnabled = true;
+            tryAutoPlay();
+        }
+
+        // 事件监听
+        document.addEventListener('DOMContentLoaded', tryAutoPlay);
+        document.addEventListener('click', enableAudio);
+        document.addEventListener('keypress', enableAudio);
+
+        // 鼠标点击特效（增强版）
+        document.addEventListener('click', function(e) {
+            // 生成粒子数量
+            const particleCount = 5;
+            for(let i = 0; i < particleCount; i++) {
+                const element = document.createElement('div');
+                element.className = 'interactive-element';
+                
+                // 随机位置偏移
+                const offsetX = (Math.random() - 0.5) * 30;
+                const offsetY = (Math.random() - 0.5) * 30;
+                element.style.left = e.pageX - 10 + offsetX + 'px';
+                element.style.top = e.pageY - 10 + offsetY + 'px';
+                
+                // 颜色和动画
+                const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'];
+                element.style.background = colors[Math.floor(Math.random() * colors.length)];
+                element.style.transform = `scale(${Math.random() * 2 + 1})`;
+                element.style.opacity = Math.random();
+                
+                document.body.appendChild(element);
+                
+                // 移除元素
+                setTimeout(() => {
+                    element.remove();
+                }, 1000);
+            }
+        });
+
+        // 高级背景渐变效果
+        let hue = 0;
+        const backgroundAnimation = () => {
+            hue = (hue + 0.5) % 360;
+            document.body.style.backdropFilter = `hue-rotate(${hue}deg)`;
+            requestAnimationFrame(backgroundAnimation);
+        };
+        backgroundAnimation();
+
+        // 智能按钮颜色变化
+        const btn = document.querySelector('.back-btn');
+        let colorInterval = setInterval(() => {
+            const hue = Math.random() * 360;
+            btn.style.background = `hsl(${hue}, 70%, 60%)`;
+            btn.style.boxShadow = `0 0 15px hsl(${hue}, 70%, 60%)`;
+        }, 3000);
+
+        // 响应式调整
+        window.addEventListener('resize', () => {
+            clearInterval(colorInterval);
+            colorInterval = setInterval(() => {
+                const hue = Math.random() * 360;
+                btn.style.background = `hsl(${hue}, 70%, 60%)`;
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>液态宇宙</title>
+    <style>
+        :root {
+            --fluid-accent: #ff6b6b;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: url('red%20rudy.png') center/cover;
+            font-family: 'Helvetica Neue', sans-serif;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+  
+        .vortex-portal:hover {
+            transform: rotate(360deg) scale(1.5);
+            background: var(--fluid-accent);
+        }
+
+        .fluid-card {
+            position: absolute;
+            background: rgba(133, 9, 9, 0.85);
+            padding: 1rem;
+            border-radius: 34px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            transition: 0.5s;
+            max-width: 300px;
+            cursor: move;
+        }
+
+        .quantum-string {
+            position: fixed;
+            background: var(--fluid-accent);
+            pointer-events: none;
+            transform-origin: left center;
+        }
+
+        @keyframes fluid-flow {
+            0% { border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%; }
+            50% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            100% { border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%; }
+        }
+
+        .liquid-blob {
+            position: absolute;
+            background: rgba(255,255,255,0.2);
+            animation: fluid-flow 8s infinite linear;
+            mix-blend-mode: overlay;
+        }
+        
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,107,107,0.5);
+        }
+
+        /* 音乐控制按钮 */
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,107,107,0.8);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s;
+            backdrop-filter: blur(5px);
+            border: 2px solid white;
+        }
+
+        .music-control:hover {
+            transform: scale(1.2);
+            background: rgba(255,107,107,1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景音乐元素 -->
+    <audio id="bgMusic" loop>
+        <source src="jenn.MP3" type="audio/mpeg">
+        您的浏览器不支持音频播放
+    </audio>
+
+    <!-- 音乐控制按钮 -->
+    <div class="music-control" onclick="toggleMute()"></div>
+
+    <a href="index3.html" class="back-btn">BACK</a>
+    
+    <div class="fluid-card">
+        <h2>ICE CREAM</h2>
+        <p>Move your mouse</p>
+    </div>
+
+    <script>
+        // 自动播放音乐逻辑
+        document.addEventListener('DOMContentLoaded', () => {
+            const audio = document.getElementById('bgMusic');
+            let attemptedPlay = false;
+
+            const playMusic = () => {
+                if (attemptedPlay) return;
+                attemptedPlay = true;
+                
+                audio.volume = 0.3;
+                audio.play().catch(e => {
+                    // 添加点击播放后备方案
+                    document.body.addEventListener('click', () => {
+                        audio.play().then(() => {
+                            audio.volume = 0.3;
+                        });
+                    }, { once: true });
+                });
+            }
+
+            // 首次尝试播放
+            playMusic();
+        });
+
+        // 静音切换函数
+        function toggleMute() {
+            const audio = document.getElementById('bgMusic');
+            audio.muted = !audio.muted;
+            document.querySelector('.music-control').style.background = 
+                audio.muted ? 'rgba(150,150,150,0.8)' : 'rgba(255,107,107,0.8)';
+        }
+
+        // 原始交互功能 ========================================
+        // 量子弦绘制系统
+        let isDrawing = false;
+        let lastPoint = null;
+        const strings = new Set();
+
+        document.addEventListener('mousedown', startDrawing);
+        document.addEventListener('mousemove', drawString);
+        document.addEventListener('mouseup', endDrawing);
+
+        function startDrawing(e) {
+            isDrawing = true;
+            lastPoint = { x: e.clientX, y: e.clientY };
+        }
+
+        function drawString(e) {
+            if (!isDrawing) return;
+            
+            const string = document.createElement('div');
+            string.className = 'quantum-string';
+            
+            const dx = e.clientX - lastPoint.x;
+            const dy = e.clientY - lastPoint.y;
+            const length = Math.sqrt(dx*dx + dy*dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+            string.style.width = length + 'px';
+            string.style.height = Math.random()*4 + 2 + 'px';
+            string.style.left = lastPoint.x + 'px';
+            string.style.top = lastPoint.y + 'px';
+            string.style.transform = `rotate(${angle}deg)`;
+            string.style.opacity = 0.7;
+
+            document.body.appendChild(string);
+            strings.add(string);
+            
+            lastPoint = { x: e.clientX, y: e.clientY };
+
+            setTimeout(() => {
+                string.remove();
+                strings.delete(string);
+            }, 5000);
+        }
+
+        function endDrawing() {
+            isDrawing = false;
+        }
+
+        // 流体动力学效果
+        document.addEventListener('mousemove', (e) => {
+            const blob = document.createElement('div');
+            blob.className = 'liquid-blob';
+            blob.style.left = e.pageX + 'px';
+            blob.style.top = e.pageY + 'px';
+            blob.style.width = blob.style.height = Math.random()*100 + 50 + 'px';
+            
+            blob.animate([
+                { transform: 'scale(0) rotate(0deg)' },
+                { transform: `scale(1) rotate(${Math.random()*360}deg)` }
+            ], {
+                duration: 2000,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            }).onfinish = () => blob.remove();
+            
+            document.body.appendChild(blob);
+        });
+
+        // 卡片磁吸效果
+        const card = document.querySelector('.fluid-card');
+        let targetX = window.innerWidth/2 - 150;
+        let targetY = window.innerHeight/2 - 100;
+
+        document.addEventListener('mousemove', (e) => {
+            const dx = e.clientX - (targetX + 150);
+            const dy = e.clientY - (targetY + 50);
+            const distance = Math.sqrt(dx*dx + dy*dy);
+            
+            if (distance < 200) {
+                targetX += dx * 0.1;
+                targetY += dy * 0.1;
+            }
+            
+            card.style.left = targetX + 'px';
+            card.style.top = targetY + 'px';
+        });
+
+        // 动态色彩演变
+        let hue = 0;
+        setInterval(() => {
+            document.documentElement.style.setProperty('--fluid-accent', 
+                `hsl(${hue = (hue + 2) % 360}, 70%, 60%)`);
+        }, 50);
+    </script>
+</body>
+</html>
